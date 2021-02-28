@@ -9,6 +9,7 @@ namespace RecursiveCalculator
 	as sharing the same order and doing similar operations from left to right, and some say to prioritise D over M.
 	
 	1+3 = 4
+	-9+2 = -7
 	2+4+6+8 = 20
 	5-3+4-2 = 4
 	6*6 = 36
@@ -21,10 +22,11 @@ namespace RecursiveCalculator
 	*/
     class Program
     {
+		static readonly bool DebugMode = true;
         static void Main(string[] args)
         {
             Console.WriteLine("Enter equation:");
-			string equation = Console.ReadLine();
+			string equation = Console.ReadLine().Replace(" ", "");
 			try
 			{
 				float result = Calculate(equation);
@@ -33,6 +35,7 @@ namespace RecursiveCalculator
 			catch (Exception e)
 			{
 				Console.WriteLine(e.Message);
+				Console.WriteLine(e.StackTrace);
 			}
 
 			Console.ReadKey(true);
@@ -40,16 +43,18 @@ namespace RecursiveCalculator
 
 		static float Calculate(string toCalc)
 		{
+			Debug("DEBUG: Begin Calculate");
 			string theCalc = toCalc;
-			float total = 0;
-			//first, find brackets, calculate them and substitute them into the string.
+
+			//then, find brackets, calculate them and substitute them into the string.
 			for (int i = 0; i < toCalc.Length; i++)
 			{
 				if (toCalc[i] == '(')
 				{
+					Debug("Found bracket!");
 					int endBracketIndex = IndexOfMatchingBracket(toCalc, i);
 					if (endBracketIndex == -1) throw new FormatException("Open bracket is missing a closed bracket!");
-					string bracketCalcString = toCalc.Substring(i, endBracketIndex - i);
+					string bracketCalcString = toCalc.Substring(i, endBracketIndex - i + 1);
 					//RECURSION TIME
 					float bracketResult = Calculate(bracketCalcString);
 					ReplaceFirstOccurrence(theCalc, bracketCalcString, bracketResult.ToString());
@@ -65,7 +70,8 @@ namespace RecursiveCalculator
 
 			foreach (char currOperator in operators)
 			{
-				for (int i = 0; i < theCalc.Length; i++)
+				Func<int> len = () => theCalc.Length;
+				for (int i = 0; i < len(); i++)
 				{
 					if (theCalc[i] == currOperator)
 					{
@@ -76,7 +82,7 @@ namespace RecursiveCalculator
 						{
 							if (!IsNumberOrDecimalPlace(theCalc[i2])) 
 							{
-								prevNumStartIndex = i2 + 1;
+								prevNumStartIndex = i2 - 1;
 								break;
 							}
 						}
@@ -87,16 +93,20 @@ namespace RecursiveCalculator
 						{
 							if (!IsNumberOrDecimalPlace(theCalc[i2])) 
 							{
-								postNumStartIndex = i2 - 1;
+								postNumStartIndex = i2 + 1;
 								break;
 							}
 						}
 
 						if (postNumStartIndex == null) postNumStartIndex = theCalc.Length - 1;
 
-						string splitCalc = theCalc.Substring((int) prevNumStartIndex, (int) (postNumStartIndex - prevNumStartIndex));
+						Debug($"DEBUG: prevNumSI: {prevNumStartIndex}, postNumSI: {postNumStartIndex}, i: {i}");
+						string splitCalc = theCalc.Substring((int) prevNumStartIndex, (int) (postNumStartIndex - prevNumStartIndex + 1));
+						Debug($"DEBUG: splitCalc: {splitCalc}");
 						float result = SingleOperationCalculate(splitCalc);
+						Debug($"DEBUG: pre replace theCalc: {theCalc}, splitCalc: {splitCalc}, result: {result}, result.ToString(): {result.ToString()}");
 						theCalc = ReplaceFirstOccurrence(theCalc, splitCalc, result.ToString());
+						Debug($"DEBUG: Replaced calc: {theCalc}");
 						//set i to be at the start of the result string
 						//i is the index of the operator in the middle of the split out calc
 						//set i to the index of the start. we'll go over the result of this loop but it won't do anything
@@ -108,12 +118,14 @@ namespace RecursiveCalculator
 				}
 			}
 			
+			Debug($"DEBUG: theCalc: {theCalc}");
 			return float.Parse(theCalc);
 		}
 
 		//calculate a simple two number one operation calc, e.g 2+2
 		static float SingleOperationCalculate(string toCalc)
 		{
+			Debug("DEBUG: Calc: " + toCalc);
 			foreach (char character in toCalc)
 			{
 				if (!IsNumberOrDecimalPlace(character))
@@ -128,30 +140,35 @@ namespace RecursiveCalculator
 					{
 						case '+':
 							splitCalc = toCalc.Split('+');
+							Debug($"DEBUG: splitCalc 0: {splitCalc[0]}, 1: {splitCalc[1]}");
 							num1 = float.Parse(splitCalc[0]);
 							num2 = float.Parse(splitCalc[1]);
 							result = num1 + num2;
 							break;
 						case '-':
 							splitCalc = toCalc.Split('-');
+							Debug($"DEBUG: splitCalc 0: {splitCalc[0]}, 1: {splitCalc[1]}");
 							num1 = float.Parse(splitCalc[0]);
 							num2 = float.Parse(splitCalc[1]);
 							result = num1 - num2;
 							break;
 						case '*':
 							splitCalc = toCalc.Split('*');
+							Debug($"DEBUG: splitCalc 0: {splitCalc[0]}, 1: {splitCalc[1]}");
 							num1 = float.Parse(splitCalc[0]);
 							num2 = float.Parse(splitCalc[1]);
 							result = num1 * num2;
 							break;
 						case '/':
 							splitCalc = toCalc.Split('/');
+							Debug($"DEBUG: splitCalc 0: {splitCalc[0]}, 1: {splitCalc[1]}");
 							num1 = float.Parse(splitCalc[0]);
 							num2 = float.Parse(splitCalc[1]);
 							result = num1 / num2;
 							break;
 						case '^':
 							splitCalc = toCalc.Split('^');
+							Debug($"DEBUG: splitCalc 0: {splitCalc[0]}, 1: {splitCalc[1]}");
 							num1 = float.Parse(splitCalc[0]);
 							num2 = float.Parse(splitCalc[1]);
 							result = (float) Math.Pow(num1, num2);
@@ -202,11 +219,20 @@ namespace RecursiveCalculator
 		}
 
 		//from https://stackoverflow.com/a/146747, referenced 25/02/2021
+		//from https://stackoverflow.com/a/141076, referenced 28/02/2021
 		static string ReplaceFirstOccurrence(string originalString, string toReplace, string replaceWith)
 		{
-			Regex regex = new Regex("foo");
-			string result = regex.Replace("foo1 foo2 foo3 foo4", "bar", 1);  
-			return result;
+			int pos = originalString.IndexOf(toReplace);
+  			if (pos < 0)
+			{
+				return originalString;
+			}
+			return originalString.Substring(0, pos) + replaceWith + originalString.Substring(pos + toReplace.Length);  
+		}
+
+		static void Debug(string message)
+		{
+			if (Program.DebugMode) Console.WriteLine(message);
 		}
     }
 }
