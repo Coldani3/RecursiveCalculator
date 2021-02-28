@@ -60,24 +60,24 @@ namespace RecursiveCalculator
 					Debug("DEBUG: Calculate() Found bracket!");
 					int endBracketIndex = IndexOfMatchingBracket(toCalc, i);
 					if (endBracketIndex == -1) throw new FormatException("Open bracket is missing a closed bracket!");
-					Debug($"DEBUG: Calculate() toCalc[endBracketIndex] {toCalc[endBracketIndex]}");
-					string bracketCalcString = toCalc.Substring(i + 1, endBracketIndex - i);
+					Debug($"DEBUG: Calculate() [brackets]: toCalc[endBracketIndex] {toCalc[endBracketIndex]}");
+					string bracketCalcString = toCalc.Substring(i + 1, endBracketIndex - i - 1);
 					//RECURSION TIME
 					float bracketResult = Calculate(bracketCalcString);
-					ReplaceFirstOccurrence(theCalc, bracketCalcString, bracketResult.ToString());
+					Debug($"DEBUG: Calculate() [brackets]: result: {bracketResult}, bracket calc string: {bracketCalcString}");
+					theCalc = ReplaceFirstOccurrence(theCalc, '(' + bracketCalcString + ')', bracketResult.ToString());
+					Debug($"DEBUG: Calculate() [brackets]: replaced calc: {theCalc}");
 					//theCalc.Replace(bracketCalcString, bracketResult.ToString());
 				}
 			}
 
-			char[][] operatorss = new char[][] {new char[] {'^'}, new char[] {'/', '*'}, new char[] {'+', '-'}};
-
 			//with all the brackets removed, it is now safe to treat it as if there are no brackets. we use 'theCalc' from here.
-			char[] operators = new char[] {'^', '/', '*', '+', '-'};
+			char[][] operators = new char[][] {new char[] {'^'}, new char[] {'/', '*'}, new char[] {'+', '-'}};
 
 			//loop through the calc by order of BIDMAS, and replace found calcs with the result of said calc
 			//this should eventually mean the calc will be reduced to the result.
 
-			foreach (char[] currOperators in operatorss)
+			foreach (char[] currOperators in operators)
 			{
 				Func<int> len = () => theCalc.Length;
 				for (int i = 0; i < len(); i++)
