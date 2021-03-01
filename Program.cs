@@ -19,23 +19,34 @@ namespace RecursiveCalculator
 	(3+2)/4 = 1.25
 	3+(2/4) = 3.5
 	6+(12/2)-9+(6*9)+4=61
+	5*((4+3)*2+7)=105
 	*/
     class Program
     {
-		static readonly bool DebugMode = true;
+		static readonly bool DebugMode = false;
         static void Main(string[] args)
         {
-            Console.WriteLine("Enter equation (please put negative numbers in brackets):");
-			string equation = Console.ReadLine().Replace(" ", "");
-			try
+			bool Running = true;
+			while (Running)
 			{
-				float result = Calculate(equation);
-				Console.WriteLine($"Result: {result}");
-			}
-			catch (Exception e)
-			{
-				Console.WriteLine(e.Message);
-				Console.WriteLine(e.StackTrace);
+				Console.WriteLine("Enter equation:");
+				string equation = Console.ReadLine().Replace(" ", "");
+				if (equation == "exit") Running = false;
+				
+				if (Running)
+				{
+					try
+					{
+						float result = Calculate(equation);
+						Console.WriteLine($"Result: {result}");
+					}
+					catch (Exception e)
+					{
+						Console.WriteLine(e.Message);
+						Console.WriteLine(e.StackTrace);
+						Running = false;
+					}
+				}
 			}
 
 			Console.ReadKey(true);
@@ -47,10 +58,10 @@ namespace RecursiveCalculator
 			string theCalc = toCalc;
 
 			//first, check to see if the first symbol is a minus and put 0 in front of it
-			if (toCalc[0] == '-')
-			{
-				theCalc = '0' + theCalc;
-			}
+			// if (toCalc[0] == '-')
+			// {
+			// 	theCalc = '0' + theCalc;
+			// }
 
 			//then, find brackets, calculate them and substitute them into the string.
 			for (int i = 0; i < toCalc.Length; i++)
@@ -80,18 +91,22 @@ namespace RecursiveCalculator
 			foreach (char[] currOperators in operators)
 			{
 				Func<int> len = () => theCalc.Length;
-				for (int i = 0; i < len(); i++)
+				for (int i = 1; i < len(); i++)
 				{
 					if (ArrayContains(currOperators, theCalc[i]))
 					{
 						int? prevNumStartIndex = null;
 						int? postNumStartIndex = null;
 
+						//search for starts of numbers by going until you reach another symbol
+
 						for (int i2 = i - 1; i2 >= 0; i2--)
 						{
+							if (i2 == 0 && theCalc[i2] == '-') continue;
 							if (!IsNumberOrDecimalPlace(theCalc[i2])) 
 							{
-								prevNumStartIndex = i2 + 1;
+								if (theCalc[i2] == '-' && !IsNumberOrDecimalPlace(theCalc[Math.Clamp(i2 - 1, 0, theCalc.Length)])) prevNumStartIndex = i2;
+								else prevNumStartIndex = i2 + 1;
 								break;
 							}
 						}
@@ -102,7 +117,9 @@ namespace RecursiveCalculator
 						{
 							if (!IsNumberOrDecimalPlace(theCalc[i2])) 
 							{
-								postNumStartIndex = i2 - 1;
+								//continue iterating if it's a negative
+								if (i2 == i + 1 && theCalc[i2] == '-') continue;
+								else postNumStartIndex = i2 - 1;
 								break;
 							}
 						}
@@ -114,7 +131,7 @@ namespace RecursiveCalculator
 						Debug($"DEBUG: Calculate() splitCalc: {splitCalc}");
 						float result = SingleOperationCalculate(splitCalc);
 						string strResult = result.ToString();
-						if (strResult[0] == '-') strResult = '0' + strResult;
+						//if (strResult[0] == '-') strResult = '0' + strResult;
 						Debug($"DEBUG: Calculate() pre replace theCalc: {theCalc}, splitCalc: {splitCalc}, result: {result}, result.ToString(): {result.ToString()}");
 						theCalc = ReplaceFirstOccurrence(theCalc, splitCalc, strResult);
 						Debug($"DEBUG: Calculate() Replaced calc: {theCalc}");
@@ -137,10 +154,12 @@ namespace RecursiveCalculator
 		static float SingleOperationCalculate(string toCalc)
 		{
 			Debug("DEBUG: SingleOperationCalculate() Calc: " + toCalc);
-			foreach (char character in toCalc)
+			for (int i = 0; i < toCalc.Length; i++)
 			{
+				char character = toCalc[i];
 				if (!IsNumberOrDecimalPlace(character))
 				{
+					if (character == '-' && i == 0) continue;
 					//it is an operation
 					float result;
 					string[] splitCalc;
