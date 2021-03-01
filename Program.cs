@@ -29,10 +29,10 @@ namespace RecursiveCalculator
 			bool Running = true;
 			while (Running)
 			{
-				Console.WriteLine("Enter equation:");
+				Console.WriteLine("Enter equation (enter 'exit' to exit):");
 				string equation = Console.ReadLine().Replace(" ", "");
 				if (equation == "exit") Running = false;
-				
+
 				if (Running)
 				{
 					try
@@ -49,6 +49,7 @@ namespace RecursiveCalculator
 				}
 			}
 
+			Console.WriteLine("Press any key to exit!");
 			Console.ReadKey(true);
         }
 
@@ -57,13 +58,7 @@ namespace RecursiveCalculator
 			Debug("DEBUG: Calculate() Begin Calculate");
 			string theCalc = toCalc;
 
-			//first, check to see if the first symbol is a minus and put 0 in front of it
-			// if (toCalc[0] == '-')
-			// {
-			// 	theCalc = '0' + theCalc;
-			// }
-
-			//then, find brackets, calculate them and substitute them into the string.
+			//find brackets, calculate them and substitute them into the string.
 			for (int i = 0; i < toCalc.Length; i++)
 			{
 				if (toCalc[i] == '(')
@@ -74,20 +69,28 @@ namespace RecursiveCalculator
 					Debug($"DEBUG: Calculate() [brackets]: toCalc[endBracketIndex] {toCalc[endBracketIndex]}");
 					string bracketCalcString = toCalc.Substring(i + 1, endBracketIndex - i - 1);
 					//RECURSION TIME
+					//sorry, ahem
+					/*
+						|--\ |---  /- |   | |--\    ___ _____  /--\  |\   |
+						|   ||___ |   |   | |   |  /      |   |    | | \  |
+						|  / |    |   |   | |  /   \_     |   |    | |  \ |
+						|  \ |___  \_ |___| |  \  ___\  __|__  \__/  |   \|
+					*/
 					float bracketResult = Calculate(bracketCalcString);
 					Debug($"DEBUG: Calculate() [brackets]: result: {bracketResult}, bracket calc string: {bracketCalcString}");
 					theCalc = ReplaceFirstOccurrence(theCalc, '(' + bracketCalcString + ')', bracketResult.ToString());
 					Debug($"DEBUG: Calculate() [brackets]: replaced calc: {theCalc}");
-					//theCalc.Replace(bracketCalcString, bracketResult.ToString());
 				}
 			}
 
 			//with all the brackets removed, it is now safe to treat it as if there are no brackets. we use 'theCalc' from here.
+
+			//each sub array is a 'priority bracket'. Brackets are treated as top priority anyways. all operators in a bracket
+			//will be evaluated left to right in the calc.
 			char[][] operators = new char[][] {new char[] {'^'}, new char[] {'/', '*'}, new char[] {'+', '-'}};
 
 			//loop through the calc by order of BIDMAS, and replace found calcs with the result of said calc
 			//this should eventually mean the calc will be reduced to the result.
-
 			foreach (char[] currOperators in operators)
 			{
 				Func<int> len = () => theCalc.Length;
@@ -131,7 +134,6 @@ namespace RecursiveCalculator
 						Debug($"DEBUG: Calculate() splitCalc: {splitCalc}");
 						float result = SingleOperationCalculate(splitCalc);
 						string strResult = result.ToString();
-						//if (strResult[0] == '-') strResult = '0' + strResult;
 						Debug($"DEBUG: Calculate() pre replace theCalc: {theCalc}, splitCalc: {splitCalc}, result: {result}, result.ToString(): {result.ToString()}");
 						theCalc = ReplaceFirstOccurrence(theCalc, splitCalc, strResult);
 						Debug($"DEBUG: Calculate() Replaced calc: {theCalc}");
@@ -140,8 +142,6 @@ namespace RecursiveCalculator
 						//set i to the index of the start. we'll go over the result of this loop but it won't do anything
 						//so it's slightly inefficient but more reliable.
 						i = (int) prevNumStartIndex;
-						//i += result.ToString().Length - 1;
-						//i -= splitCalc.Length - result.ToString().Length;
 					}
 				}
 			}
@@ -232,16 +232,6 @@ namespace RecursiveCalculator
 			return -1;
 		}
 
-		static bool IsNumber(string toCheck)
-		{
-			foreach (char character in toCheck)
-			{
-				if (!IsNumberOrDecimalPlace(character) && character != '.') return false;
-			}
-
-			return true;
-		}
-
 		static bool IsNumberOrDecimalPlace(char toCheck)
 		{
 			int asciiCode = (int) toCheck;
@@ -276,3 +266,4 @@ namespace RecursiveCalculator
 		}
     }
 }
+//VVS, U., 2008. c# - How do I replace the *first instance* of a string in .NET? [online] Stack Overflow. Available at: <https://stackoverflow.com/a/141076> [Accessed 28 Feb. 2021].
