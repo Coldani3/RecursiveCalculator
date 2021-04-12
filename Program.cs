@@ -31,7 +31,10 @@ namespace RecursiveCalculator
 			{
 				Console.WriteLine("Enter equation (enter 'exit' to exit):");
 				string equation = Console.ReadLine().Replace(" ", "");
-				if (equation == "exit") Running = false;
+				if (equation == "exit") 
+				{
+					Running = false;
+				}
 
 				if (Running)
 				{
@@ -65,7 +68,12 @@ namespace RecursiveCalculator
 				{
 					Debug("DEBUG: Calculate() Found bracket!");
 					int endBracketIndex = IndexOfMatchingBracket(toCalc, i);
-					if (endBracketIndex == -1) throw new FormatException("Open bracket is missing a closed bracket!");
+
+					if (endBracketIndex == -1) 
+					{
+						throw new FormatException("Open bracket is missing a closed bracket!");
+					}
+
 					Debug($"DEBUG: Calculate() [brackets]: toCalc[endBracketIndex] {toCalc[endBracketIndex]}");
 					string bracketCalcString = toCalc.Substring(i + 1, endBracketIndex - i - 1);
 					//RECURSION TIME
@@ -105,29 +113,52 @@ namespace RecursiveCalculator
 
 						for (int i2 = i - 1; i2 >= 0; i2--)
 						{
-							if (i2 == 0 && theCalc[i2] == '-') continue;
+							if (i2 == 0 && theCalc[i2] == '-') 
+							{
+								continue;
+							}
+
 							if (!IsNumberOrDecimalPlace(theCalc[i2])) 
 							{
-								if (theCalc[i2] == '-' && !IsNumberOrDecimalPlace(theCalc[Math.Clamp(i2 - 1, 0, theCalc.Length)])) prevNumStartIndex = i2;
-								else prevNumStartIndex = i2 + 1;
+								if (theCalc[i2] == '-' && !IsNumberOrDecimalPlace(theCalc[Math.Clamp(i2 - 1, 0, theCalc.Length)])) 
+								{
+									prevNumStartIndex = i2;
+								}
+								else 
+								{
+									prevNumStartIndex = i2 + 1;
+								}
 								break;
 							}
 						}
 						//if an index was not found, assume it's at the very start of theCalc
-						if (prevNumStartIndex == null) prevNumStartIndex = 0;
+						if (prevNumStartIndex == null) 
+						{
+							prevNumStartIndex = 0;
+						}
 
 						for (int i2 = i + 1; i2 < theCalc.Length; i2++)
 						{
 							if (!IsNumberOrDecimalPlace(theCalc[i2])) 
 							{
 								//continue iterating if it's a negative
-								if (i2 == i + 1 && theCalc[i2] == '-') continue;
-								else postNumStartIndex = i2 - 1;
+								if (i2 == i + 1 && theCalc[i2] == '-') 
+								{
+									continue;
+								}
+								else 
+								{
+									postNumStartIndex = i2 - 1;
+								}
+
 								break;
 							}
 						}
 
-						if (postNumStartIndex == null) postNumStartIndex = theCalc.Length - 1;
+						if (postNumStartIndex == null) 
+						{
+							postNumStartIndex = theCalc.Length - 1;
+						}
 
 						Debug($"DEBUG: Calculate() prevNumSI: {prevNumStartIndex}, postNumSI: {postNumStartIndex}, i: {i}");
 						string splitCalc = theCalc.Substring((int) prevNumStartIndex, (int) (postNumStartIndex - prevNumStartIndex + 1));
@@ -159,7 +190,11 @@ namespace RecursiveCalculator
 				char character = toCalc[i];
 				if (!IsNumberOrDecimalPlace(character))
 				{
-					if (character == '-' && i == 0) continue;
+					if (character == '-' && i == 0) 
+					{
+						continue;
+					}
+
 					//it is an operation
 					float result;
 					string[] splitCalc;
@@ -222,10 +257,19 @@ namespace RecursiveCalculator
 				int depth = 1;
 				for (int i = openingIndex + 1; i < calc.Length; i++)
 				{
-					if (calc[i] == '(') depth++;
-					else if (calc[i] == ')') depth--;
+					if (calc[i] == '(') 
+					{
+						depth++;
+					}
+					else if (calc[i] == ')') 
+					{
+						depth--;
+					}
 
-					if (depth == 0) return i;
+					if (depth == 0) 
+					{
+						return i;
+					}
 				}
 			}
 
@@ -235,7 +279,11 @@ namespace RecursiveCalculator
 		static bool IsNumberOrDecimalPlace(char toCheck)
 		{
 			int asciiCode = (int) toCheck;
-			if (!((asciiCode >= 48 && asciiCode <= 57) || toCheck == '.')) return false;
+			if (!((asciiCode >= 48 && asciiCode <= 57) || toCheck == '.')) 
+			{
+				return false;
+			}
+
 			return true;
 		}
 
@@ -254,7 +302,10 @@ namespace RecursiveCalculator
 		{
 			foreach (T obj in array)
 			{
-				if (obj.Equals(contains)) return true;
+				if (obj.Equals(contains)) 
+				{
+					return true;
+				}
 			}
 
 			return false;
@@ -262,7 +313,10 @@ namespace RecursiveCalculator
 
 		static void Debug(string message)
 		{
-			if (Program.DebugMode) Console.WriteLine(message);
+			if (Program.DebugMode) 
+			{
+				Console.WriteLine(message);
+			}
 		}
     }
 }
