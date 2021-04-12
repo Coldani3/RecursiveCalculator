@@ -291,10 +291,12 @@ namespace RecursiveCalculator
 		static string ReplaceFirstOccurrence(string originalString, string toReplace, string replaceWith)
 		{
 			int pos = originalString.IndexOf(toReplace);
+			
   			if (pos < 0)
 			{
 				return originalString;
 			}
+
 			return originalString.Substring(0, pos) + replaceWith + originalString.Substring(pos + toReplace.Length);  
 		}
 
